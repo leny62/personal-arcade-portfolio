@@ -1,26 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Dark mode (default) */
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 30;
+  
+  /* Arcade theme colors */
+  --neon-pink: #ff00ff;
+  --neon-blue: #00ffff;
+  --neon-green: #00ff00;
+  --neon-yellow: #ffff00;
+  --neon-purple: #9900ff;
+  --neon-orange: #ff6600;
+  --neon-teal: #00ffcc;
+  --neon-red: #ff0066;
+  --dark-purple: #1a0033;
+  --dark-blue: #000033;
+  --dark-teal: #003333;
+  
+  /* Light mode colors */
+  --light-bg: #f0f0f0;
+  --light-text: #222222;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Light mode overrides */
+.light {
+  --foreground-rgb: 34, 34, 34;
+  --background-start-rgb: 240, 240, 240;
+  --background-end-rgb: 255, 255, 255;
+  
+  /* Adjust some colors for better visibility in light mode */
+  --neon-blue: #0088ff;
+  --neon-purple: #6600cc;
+  --neon-green: #00cc00;
+  --dark-purple: #e6d8ff;
+  --dark-blue: #d8e6ff;
+  --dark-teal: #d8ffee;
+  --light-text: #222222;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    color: rgb(var(--foreground-rgb));
+    background-color: rgb(var(--background-start-rgb));
+    font-family: 'VT323', monospace;
+    background: linear-gradient(to bottom, 
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb)));
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6, button {
+    font-family: 'Press Start 2P', cursive;
+  }
+
+  * {
+    @apply transition-colors duration-200;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .neon-text {
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 25px var(--neon-blue);
+  }
+  
+  .neon-border {
+    box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-pink), 0 0 20px var(--neon-pink);
+  }
+
+  .pixel-corners {
+    clip-path: polygon(
+      0% 4px, 4px 4px, 4px 0%, calc(100% - 4px) 0%, calc(100% - 4px) 4px, 100% 4px, 
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 
+      4px calc(100% - 4px), 0% calc(100% - 4px)
+    );
+  }
+
+  .arcade-btn {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: wider;
+    transition-property: all;
+    transition-duration: 300ms;
+    transform: translateZ(0);
+    font-family: 'Press Start 2P', cursive;
+    background: linear-gradient(45deg, var(--dark-purple), var(--dark-blue));
+    border: 2px solid var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+    text-shadow: 0 0 5px var(--neon-blue);
+  }
+
+  .arcade-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--neon-blue);
+  }
+
+  .arcade-btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* Light mode adjustments */
+  .light .neon-text {
+    text-shadow: 0 0 2px #333, 0 0 5px #333, 0 0 10px var(--neon-blue);
+  }
+  
+  .light .arcade-btn {
+    background: linear-gradient(45deg, var(--dark-purple), var(--dark-blue));
+    border: 2px solid var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue);
+    text-shadow: 0 0 2px var(--neon-blue);
+    color: #222;
+  }
+
+  /* Darker text for light mode in motion divs */
+  .light .motion-div-text {
+    color: #222222;
+  }
+}
+
+/* Scanline effect - only in dark mode */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+.light .scanlines {
+  opacity: 0.05;
+}
+
+/* CRT flicker animation */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.97; }
+  15% { opacity: 0.94; }
+  20% { opacity: 0.98; }
+  25% { opacity: 0.95; }
+  30% { opacity: 0.97; }
+  35% { opacity: 0.96; }
+  40% { opacity: 0.97; }
+  45% { opacity: 0.94; }
+  50% { opacity: 0.98; }
+  55% { opacity: 0.96; }
+  60% { opacity: 0.97; }
+  65% { opacity: 0.95; }
+  70% { opacity: 0.96; }
+  75% { opacity: 0.94; }
+  80% { opacity: 0.98; }
+  85% { opacity: 0.97; }
+  90% { opacity: 0.95; }
+  95% { opacity: 0.96; }
+  100% { opacity: 0.97; }
+}
+
+.crt-effect {
+  animation: flicker 0.3s infinite;
+}
+
+.light .crt-effect {
+  animation: none;
 }

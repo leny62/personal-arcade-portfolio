@@ -1,36 +1,180 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Arcade-Themed Portfolio
 
-## Getting Started
+A retro arcade-themed portfolio website built with Next.js, featuring a dark/light mode toggle, CRT effects, and responsive design.
 
-First, run the development server:
+![Arcade Portfolio](https://github.com/leny62/personal-arcade-portfolio/raw/main/public/preview.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+- **Retro Arcade UI**: Neon colors, pixel fonts, and CRT effects
+- **Dark/Light Mode**: Toggle between dark (arcade) and light modes
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Smooth Animations**: Powered by Framer Motion
+- **Accessibility**: WCAG compliant with keyboard navigation
+- **SEO Optimized**: Built-in metadata configuration
+- **TypeScript**: Type-safe codebase
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/personal-arcade-portfolio.git
+   cd personal-arcade-portfolio
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# Add any other environment variables here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏗️ Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+personal-arcade-portfolio/
+├── app/                    # Next.js App Router
+│   ├── components/         # React components
+│   │   ├── layout/         # Layout components (Header, Footer)
+│   │   ├── ui/             # UI components (ThemeToggle, etc.)
+│   │   └── ...
+│   ├── globals.css         # Global styles
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
+├── public/                 # Static assets
+└── ...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎮 Customization
 
-## Learn More
+### Theme Colors
 
-To learn more about Next.js, take a look at the following resources:
+Edit the CSS variables in `app/globals.css` to customize the color scheme:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```css
+:root {
+  /* Dark mode (default) */
+  --neon-pink: #ff00ff;
+  --neon-blue: #00ffff;
+  /* Add or modify colors here */
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Adding Pages
 
-## Deploy on Vercel
+Create new pages in the `app` directory following the Next.js App Router convention:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+├── about/
+│   └── page.tsx            # /about route
+├── projects/
+│   └── page.tsx            # /projects route
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧪 Testing
+
+Run tests with:
+
+```bash
+npm test
+# or
+yarn test
+```
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+The easiest way to deploy is using Vercel:
+
+1. Push your code to GitHub
+2. Import your repository on [Vercel](https://vercel.com/new)
+3. Vercel will detect Next.js and set up the build configuration automatically
+
+### Other Platforms
+
+For other platforms, build the project first:
+
+```bash
+npm run build
+# or
+yarn build
+```
+
+Then deploy the generated `.next` folder according to your platform's instructions.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/your-feature-name`
+3. Make your changes
+4. Run tests and linting: `npm run lint && npm test`
+5. Commit your changes: `git commit -m 'Add some feature'`
+6. Push to the branch: `git push origin feature/your-feature-name`
+7. Submit a pull request
+
+### Code Style Guidelines
+
+- Follow the existing code style
+- Use TypeScript for type safety
+- Write meaningful commit messages
+- Document new components and functions
+- Ensure accessibility (WCAG compliance)
+
+### Using This Project as a Template
+
+If you want to use this project as a template for your own portfolio:
+
+1. Fork the repository
+2. Update personal information in:
+   - `app/layout.tsx` (metadata)
+   - Content files for your projects, experience, etc.
+3. Replace images in the `public` directory
+4. Customize colors in `app/globals.css`
+5. Deploy your version
+
+Please provide attribution by keeping a link to the original project in your footer.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgements
+
+- [Next.js](https://nextjs.org/) - React framework
+- [Framer Motion](https://www.framer.com/motion/) - Animation library
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [next-themes](https://github.com/pacocoursey/next-themes) - Theme management
+- [React Icons](https://react-icons.github.io/react-icons/) - Icon library
+
+---
+
+Built with ❤️ by [Leny Pascal IHIRWE](https://github.com/leny62/)
