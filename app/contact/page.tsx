@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { getAnonymousId, trackConversion } from "@/lib/analytics";
 import {
   FaEnvelope,
   FaLinkedin,
@@ -13,6 +14,9 @@ import {
 } from "react-icons/fa";
 
 export default function ContactPage() {
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_URL || "https://evolu-backend.onrender.com";
+
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -36,7 +40,34 @@ export default function ContactPage() {
     e.preventDefault();
     setFormStatus("submitting");
 
-    setTimeout(() => {
+    const prefixedLeadName = `personal-portfolio-${formState.name.trim()}`;
+    const prefixedMessage = formState.subject.trim()
+      ? `${formState.subject.trim()} - ${formState.message}`
+      : formState.message;
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/contact`, {
+        method: "POST",
+        headers: {
+          accept: "*/*",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email,
+          message: prefixedMessage,
+          anonymousId: getAnonymousId(),
+          agreedToTerms: false,
+          agreedToPrivacy: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      await trackConversion(formState.email, prefixedLeadName, "contact_form");
+
       setFormStatus("success");
       setFormState({
         name: "",
@@ -44,11 +75,11 @@ export default function ContactPage() {
         subject: "",
         message: "",
       });
-
-      setTimeout(() => {
-        setFormStatus("idle");
-      }, 3000);
-    }, 1500);
+      setTimeout(() => setFormStatus("idle"), 5000);
+    } catch {
+      setFormStatus("error");
+      setTimeout(() => setFormStatus("idle"), 5000);
+    }
   };
 
   const contactMethods = [
@@ -69,7 +100,7 @@ export default function ContactPage() {
     {
       icon: <FaGithub className="text-2xl" />,
       title: "GitHub",
-      value: "github.com/lenyiih",
+      value: "github.com/leny62",
       action: "https://github.com/leny62",
       color: "neon-purple",
     },
@@ -235,7 +266,7 @@ export default function ContactPage() {
                     htmlFor="subject"
                     className="block font-arcade text-neon-blue mb-2"
                   >
-                    SUBJECT
+                    SUBJECT (OPTIONAL)
                   </label>
                   <input
                     type="text"
@@ -243,9 +274,8 @@ export default function ContactPage() {
                     name="subject"
                     value={formState.subject}
                     onChange={handleChange}
-                    required
                     className="w-full bg-black bg-opacity-70 border-2 border-neon-blue rounded pixel-corners p-3 font-pixel text-white focus:border-neon-green focus:outline-none transition-colors"
-                    placeholder="Enter message subject"
+                    placeholder="Enter subject (optional)"
                   />
                 </div>
 
