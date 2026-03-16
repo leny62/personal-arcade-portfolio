@@ -14,9 +14,6 @@ import {
 } from "react-icons/fa";
 
 export default function ContactPage() {
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_URL || "https://evolu-backend.onrender.com";
-
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -46,7 +43,7 @@ export default function ContactPage() {
       : formState.message;
 
     try {
-      const response = await fetch(`${apiBaseUrl}/contact`, {
+      const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           accept: "*/*",

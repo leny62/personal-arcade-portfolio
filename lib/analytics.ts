@@ -1,6 +1,3 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "";
-
 const ANON_ID_STORAGE_KEY = "personal-portfolio-anonymous-id";
 
 const createAnonymousId = () => {
@@ -32,7 +29,7 @@ export const trackConversion = async (
   eventName: "contact_form" | string
 ) => {
   try {
-    await fetch(`${API_BASE_URL}/lead-capture`, {
+    await fetch("/api/lead-capture", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
