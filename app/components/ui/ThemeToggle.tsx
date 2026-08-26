@@ -6,52 +6,45 @@ import { motion } from 'framer-motion';
 import { FaSun, FaMoon } from 'react-icons/fa';
 
 export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  // resolvedTheme, not theme: with enableSystem, theme can be "system" while the
+  // page renders dark, which flips the icon and wastes the first click.
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isDark = resolvedTheme === 'dark';
+  const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+
   if (!mounted) {
-    return <div className="w-12 h-12"></div>;
+    return <div className="w-11 h-11" aria-hidden="true" />;
   }
-
-  const isDarkMode = theme === 'dark';
-
-  const toggleTheme = () => {
-    setTheme(isDarkMode ? 'light' : 'dark');
-  };
 
   return (
     <motion.button
-      onClick={toggleTheme}
-      className="relative w-12 h-12 rounded-full flex items-center justify-center"
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      className="relative w-11 h-11 rounded-full flex items-center justify-center border-2 border-border-strong text-accent hover:border-accent transition-colors"
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.92 }}
+      aria-label={label}
+      title={label}
     >
-      <motion.div
-        initial={false}
-        animate={{ rotate: isDarkMode ? 0 : 180 }}
-        transition={{ duration: 0.5 }}
-        className="absolute inset-0 flex items-center justify-center"
+      <motion.span
+        key={isDark ? 'sun' : 'moon'}
+        initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+        animate={{ rotate: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.25 }}
+        className="flex items-center justify-center"
       >
-        {isDarkMode ? (
-          <FaSun className="text-neon-yellow text-xl" />
+        {isDark ? (
+          <FaSun className="text-neon-yellow text-lg" />
         ) : (
-          <FaMoon className="text-neon-purple text-xl" />
+          <FaMoon className="text-neon-purple text-lg" />
         )}
-      </motion.div>
-      <motion.div
-        className="absolute -inset-1 rounded-full opacity-30"
-        animate={{ 
-          backgroundColor: isDarkMode 
-            ? 'var(--neon-yellow)' 
-            : 'var(--neon-purple)'
-        }}
-      />
-      <span className="sr-only">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+      </motion.span>
     </motion.button>
   );
-} 
+}
