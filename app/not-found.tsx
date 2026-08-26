@@ -3,115 +3,116 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FaHome, FaRedo } from 'react-icons/fa';
+
+const LOG_LINES = [
+  'Searching for requested level...',
+  'ERROR: Path not found in game directory',
+  'Attempting to recover game data...',
+  'Recovery failed: 0xE0000234',
+  'Initiating emergency return to main menu...',
+];
 
 export default function NotFound() {
   const [countdown, setCountdown] = useState(10);
-  const [isGlitching, setIsGlitching] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
+    if (cancelled) return;
+    if (countdown <= 0) {
+      // The old version injected a <script> tag, which React never executes,
+      // so the countdown hit zero and nothing happened.
+      router.push('/');
+      return;
     }
-  }, [countdown]);
-
-  useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      setIsGlitching(true);
-      setTimeout(() => setIsGlitching(false), 200);
-    }, 2000);
-    
-    return () => clearInterval(glitchInterval);
-  }, []);
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, cancelled, router]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid-pattern opacity-20 z-0"></div>
-      
-      <div className="absolute inset-0 pointer-events-none scanline z-10"></div>
-      
-      <div className="relative z-20 max-w-2xl w-full text-center">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4">
+      <div
+        className="pointer-events-none absolute inset-0 bg-grid-pattern bg-grid-size opacity-60"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 w-full max-w-2xl text-center">
         <motion.div
-          initial={{ opacity: 0, y: -50 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className={`mb-8 ${isGlitching ? 'glitch' : ''}`}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
         >
-          <h1 className="text-6xl md:text-8xl font-arcade text-neon-red mb-4">
+          <h1 className="animate-glitch mb-4 font-arcade text-4xl text-neon-red md:text-6xl">
             ERROR 404
           </h1>
-          <div className="border-2 border-neon-red p-4 rounded pixel-corners bg-black bg-opacity-70 mb-6">
-            <p className="font-pixel text-white text-xl">
-              GAME OVER - LEVEL NOT FOUND
+          <div className="arcade-panel pixel-corners border-neon-red p-4">
+            <p className="font-pixel text-xl text-text">GAME OVER &mdash; LEVEL NOT FOUND</p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="arcade-panel pixel-corners mb-8 border-accent p-6 text-left"
+        >
+          <p className="mb-4 font-arcade text-xs text-neon-yellow">SYSTEM ERROR LOG:</p>
+          <div className="font-pixel text-lg text-text-muted">
+            {LOG_LINES.map((line) => (
+              <p key={line} className="mb-2">
+                <span className="text-accent" aria-hidden="true">
+                  &gt;
+                </span>{' '}
+                {line}
+              </p>
+            ))}
+            <p aria-live="polite" className="text-neon-green">
+              <span aria-hidden="true">&gt;</span>{' '}
+              {cancelled
+                ? 'Auto-redirect cancelled. Take your time.'
+                : `Auto-redirect in ${countdown} seconds`}
             </p>
           </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mb-8 p-6 border-2 border-neon-blue rounded pixel-corners bg-black bg-opacity-70"
-        >
-          <div className="font-arcade text-neon-yellow mb-4">
-            SYSTEM ERROR LOG:
-          </div>
-          <div className="font-pixel text-gray-300 text-left mb-4 overflow-hidden">
-            <p className="mb-2">{'>'} Searching for requested level...</p>
-            <p className="mb-2">{'>'} ERROR: Path not found in game directory</p>
-            <p className="mb-2">{'>'} Attempting to recover game data...</p>
-            <p className="mb-2">{'>'} Recovery failed: 0xE0000234</p>
-            <p className="mb-2">{'>'} Initiating emergency return to main menu...</p>
-            <p className="text-neon-green">{'>'} Auto-redirect in {countdown} seconds</p>
-          </div>
-          
-          {countdown === 0 && (
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `window.location.href = "/";`
-              }}
-            />
+
+          {!cancelled && (
+            <button
+              type="button"
+              onClick={() => setCancelled(true)}
+              className="mt-2 inline-flex min-h-11 items-center font-pixel text-base text-text-muted underline transition-colors hover:text-accent"
+            >
+              Cancel auto-redirect
+            </button>
           )}
         </motion.div>
-        
+
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex flex-col sm:flex-row justify-center gap-4"
+          transition={{ delay: 0.4, duration: 0.4 }}
+          className="flex flex-col justify-center gap-4 sm:flex-row"
         >
-          <Link href="/" passHref>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center px-6 py-3 bg-neon-blue bg-opacity-20 border-2 border-neon-blue text-neon-blue font-arcade rounded pixel-corners transition-all hover:bg-opacity-30"
-            >
-              <FaHome className="mr-2" />
-              RETURN TO MAIN MENU
-            </motion.div>
+          <Link href="/" className="arcade-btn pixel-corners text-[0.6rem]">
+            <FaHome aria-hidden="true" />
+            RETURN TO MAIN MENU
           </Link>
-          
-          <motion.button
-            onClick={() => window.history.back()}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center justify-center px-6 py-3 bg-neon-green bg-opacity-20 border-2 border-neon-green text-neon-green font-arcade rounded pixel-corners transition-all hover:bg-opacity-30"
+
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="arcade-btn arcade-btn-ghost pixel-corners text-[0.6rem]"
           >
-            <FaRedo className="mr-2" />
+            <FaRedo aria-hidden="true" />
             RETRY LAST LEVEL
-          </motion.button>
+          </button>
         </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-          className="mt-12 font-pixel text-gray-400 text-sm"
-        >
+
+        <p className="mt-10 font-pixel text-base text-text-muted">
           INSERT COIN TO CONTINUE...
-        </motion.div>
+        </p>
       </div>
     </div>
   );
-} 
+}

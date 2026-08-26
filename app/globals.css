@@ -1,183 +1,326 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
 @import "tailwindcss";
 
-:root {
-  /* Dark mode (default) */
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 30;
-  
-  /* Arcade theme colors */
-  --neon-pink: #ff00ff;
-  --neon-blue: #00ffff;
-  --neon-green: #00ff00;
-  --neon-yellow: #ffff00;
-  --neon-purple: #9900ff;
-  --neon-orange: #ff6600;
-  --neon-teal: #00ffcc;
-  --neon-red: #ff0066;
-  --dark-purple: #1a0033;
-  --dark-blue: #000033;
-  --dark-teal: #003333;
-  
-  /* Light mode colors */
-  --light-bg: #f0f0f0;
-  --light-text: #222222;
+/* Tailwind v4 defaults `dark:` to prefers-color-scheme. next-themes writes a class
+   on <html>, so without this the toggle and the OS disagree. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Accents. These are the LIGHT values; .dark below swaps the same names to raw
+     neon, so every text-neon-* / border-neon-* in the markup adapts for free. */
+  /* Tuned against the darkest light surface (surface-muted), so they clear
+     WCAG AA on every light surface, not just the page background. */
+  --color-neon-pink: #b01450;
+  --color-neon-blue: #00697d;
+  --color-neon-green: #1a6b2c;
+  --color-neon-yellow: #7a5a00;
+  --color-neon-purple: #5e35b1;
+  --color-neon-orange: #8f4600;
+  --color-neon-teal: #006d5e;
+  --color-neon-red: #b0003c;
+  --color-neon-cyan: #006d82;
+
+  /* Chip fills behind accent text (bio pills, project tags) */
+  --color-dark-purple: #efe3ff;
+  --color-dark-blue: #e0ecff;
+  --color-dark-teal: #dcf6ef;
+
+  /* Surfaces */
+  --color-surface: #f5efdf;
+  --color-surface-raised: #fdf9ee;
+  --color-surface-muted: #e9e0c9;
+  --color-border: #d8cbb0;
+  --color-border-strong: #8a7a55;
+
+  /* Text. inverse sits on top of an accent fill. */
+  --color-text: #241f16;
+  --color-text-muted: #635a49;
+  --color-text-inverse: #f5efdf;
+  --color-accent: #00697d;
+
+  /* Legacy names still referenced by Header/Footer */
+  --color-light-bg: #f5efdf;
+  --color-light-text: #241f16;
+
+  --font-arcade: var(--font-press-start), "VT323", monospace;
+  --font-pixel: var(--font-vt323), "Courier New", monospace;
+
+  --background-image-grid-pattern:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  --background-size-grid-size: 40px 40px;
+
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-glitch: glitch 0.4s steps(2) infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-blink: blink 1.2s steps(2) infinite;
+  --animate-flicker: flicker 3s linear infinite;
+  --animate-scroll-hint: scroll-hint 1.8s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+  }
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.15; }
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 0.97; }
+    8% { opacity: 0.94; }
+    16% { opacity: 0.98; }
+    24% { opacity: 0.95; }
+    32% { opacity: 0.97; }
+    40% { opacity: 0.93; }
+    48% { opacity: 0.98; }
+    56% { opacity: 0.96; }
+    64% { opacity: 0.97; }
+    72% { opacity: 0.94; }
+    80% { opacity: 0.98; }
+    88% { opacity: 0.96; }
+  }
+  @keyframes scroll-hint {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(6px); opacity: 1; }
+  }
 }
 
-/* Light mode overrides */
-.light {
-  --foreground-rgb: 34, 34, 34;
-  --background-start-rgb: 240, 240, 240;
-  --background-end-rgb: 255, 255, 255;
-  
-  /* Adjust some colors for better visibility in light mode */
-  --neon-blue: #0088ff;
-  --neon-purple: #6600cc;
-  --neon-green: #00cc00;
-  --dark-purple: #e6d8ff;
-  --dark-blue: #d8e6ff;
-  --dark-teal: #d8ffee;
-  --light-text: #222222;
+/* Cabinet powered down: ink on cream, glow becomes a hard printed offset. */
+:root {
+  color-scheme: light;
+  --glow: 2px 2px 0 var(--color-border-strong);
+  --glow-strong: 3px 3px 0 var(--color-border-strong);
+  --grid-line: rgb(36 31 22 / 0.08);
+  --page-gradient: linear-gradient(to bottom, #f5efdf, #ece4d0);
+}
+
+/* Cabinet powered on. */
+.dark {
+  color-scheme: dark;
+
+  --color-neon-pink: #ff00ff;
+  --color-neon-blue: #00ffff;
+  --color-neon-green: #00ff00;
+  --color-neon-yellow: #ffff00;
+  --color-neon-purple: #a855f7;
+  --color-neon-orange: #ff6600;
+  --color-neon-teal: #00ffcc;
+  --color-neon-red: #ff0066;
+  --color-neon-cyan: #00e5ff;
+
+  --color-dark-purple: #1a0033;
+  --color-dark-blue: #000033;
+  --color-dark-teal: #003333;
+
+  --color-surface: #0a0a12;
+  --color-surface-raised: #12121c;
+  --color-surface-muted: #161622;
+  --color-border: #26263a;
+  --color-border-strong: #3a3a52;
+
+  --color-text: #e8e8f0;
+  --color-text-muted: #9a9ab0;
+  --color-text-inverse: #06060a;
+  --color-accent: #00ffff;
+
+  --color-light-bg: #0a0a12;
+  --color-light-text: #e8e8f0;
+
+  --glow: 0 0 4px currentColor, 0 0 12px currentColor;
+  --glow-strong: 0 0 4px #fff, 0 0 12px currentColor, 0 0 28px currentColor;
+  --grid-line: rgb(0 255 255 / 0.1);
+  --page-gradient: linear-gradient(to bottom, #0a0a12, #05050f 40%, #0b0420);
 }
 
 @layer base {
   body {
-    color: rgb(var(--foreground-rgb));
-    background-color: rgb(var(--background-start-rgb));
-    font-family: 'VT323', monospace;
-    background: linear-gradient(to bottom, 
-      rgb(var(--background-start-rgb)),
-      rgb(var(--background-end-rgb)));
-    background-attachment: fixed;
+    color: var(--color-text);
+    background: var(--page-gradient) fixed;
+    font-family: var(--font-pixel);
     overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6, button {
-    font-family: 'Press Start 2P', cursive;
+    font-family: var(--font-arcade);
   }
 
-  * {
-    @apply transition-colors duration-200;
+  /* Press Start 2P has no lowercase and very tight metrics; give it room. */
+  h1, h2, h3 {
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  input, textarea {
+    font-family: var(--font-pixel);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
   }
 }
 
 @layer components {
   .neon-text {
-    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 25px var(--neon-blue);
+    text-shadow: var(--glow-strong);
   }
-  
+
   .neon-border {
-    box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-pink), 0 0 20px var(--neon-pink);
+    box-shadow: var(--glow);
   }
 
   .pixel-corners {
     clip-path: polygon(
-      0% 4px, 4px 4px, 4px 0%, calc(100% - 4px) 0%, calc(100% - 4px) 4px, 100% 4px, 
-      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 
+      0% 4px, 4px 4px, 4px 0%, calc(100% - 4px) 0%, calc(100% - 4px) 4px, 100% 4px,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%,
       4px calc(100% - 4px), 0% calc(100% - 4px)
     );
   }
 
+  /* The standard panel. Cream card in light, translucent CRT glass in dark. */
+  .arcade-panel {
+    background-color: var(--color-surface-raised);
+    border: 2px solid var(--color-border-strong);
+    box-shadow: var(--glow);
+  }
+
+  .dark .arcade-panel {
+    background-color: rgb(10 10 18 / 0.72);
+    backdrop-filter: blur(2px);
+  }
+
   .arcade-btn {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
     text-transform: uppercase;
-    letter-spacing: wider;
-    transition-property: all;
-    transition-duration: 300ms;
-    transform: translateZ(0);
-    font-family: 'Press Start 2P', cursive;
-    background: linear-gradient(45deg, var(--dark-purple), var(--dark-blue));
-    border: 2px solid var(--neon-blue);
-    box-shadow: 0 0 10px var(--neon-blue);
-    text-shadow: 0 0 5px var(--neon-blue);
+    letter-spacing: 0.05em;
+    font-family: var(--font-arcade);
+    color: var(--color-text-inverse);
+    background: var(--color-accent);
+    border: 2px solid var(--color-accent);
+    box-shadow: var(--glow);
+    transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
   }
 
   .arcade-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px var(--neon-blue);
+    transform: translate(-1px, -1px);
+    box-shadow: var(--glow-strong);
+    filter: brightness(1.08);
   }
 
   .arcade-btn:active {
-    transform: scale(0.95);
-  }
-  
-  /* Light mode adjustments */
-  .light .neon-text {
-    text-shadow: 0 0 2px #333, 0 0 5px #333, 0 0 10px var(--neon-blue);
-  }
-  
-  .light .arcade-btn {
-    background: linear-gradient(45deg, var(--dark-purple), var(--dark-blue));
-    border: 2px solid var(--neon-blue);
-    box-shadow: 0 0 5px var(--neon-blue);
-    text-shadow: 0 0 2px var(--neon-blue);
-    color: #222;
+    transform: translate(1px, 1px);
+    box-shadow: none;
   }
 
-  /* Darker text for light mode in motion divs */
-  .light .motion-div-text {
-    color: #222222;
+  .arcade-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Ghost variant: accent outline, transparent fill. */
+  .arcade-btn-ghost {
+    color: var(--color-accent);
+    background: transparent;
+  }
+
+  .arcade-btn-ghost:hover {
+    background: color-mix(in oklab, var(--color-accent) 14%, transparent);
+  }
+
+  /* CRT scanline overlay. Both spellings exist in the markup. */
+  .scanline,
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 2px,
+      rgb(0 0 0 / 0.14) 2px 4px
+    );
+    opacity: 0;
+  }
+
+  .dark .scanline,
+  .dark .scanlines {
+    opacity: 1;
+  }
+
+  .crt-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* Scanlines plus a vignette. Dark only: the cabinet is off in light mode. */
+  .dark .crt-overlay {
+    opacity: 1;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.16) 2px 4px),
+      radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.45) 100%);
+    animation: var(--animate-flicker);
   }
 }
 
-/* Scanline effect - only in dark mode */
-.scanlines {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 0, 0, 0.1) 50%
-  );
-  background-size: 100% 4px;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.15;
+@layer utilities {
+  /* Hard printed offset in light, neon bloom in dark. */
+  .glow-shadow {
+    box-shadow: var(--glow);
+  }
+
+  .glow-shadow-strong {
+    box-shadow: var(--glow-strong);
+  }
 }
 
-.light .scanlines {
-  opacity: 0.05;
+/* Respect the OS setting, and the in-app toggle, everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* CRT flicker animation */
-@keyframes flicker {
-  0% { opacity: 0.97; }
-  5% { opacity: 0.95; }
-  10% { opacity: 0.97; }
-  15% { opacity: 0.94; }
-  20% { opacity: 0.98; }
-  25% { opacity: 0.95; }
-  30% { opacity: 0.97; }
-  35% { opacity: 0.96; }
-  40% { opacity: 0.97; }
-  45% { opacity: 0.94; }
-  50% { opacity: 0.98; }
-  55% { opacity: 0.96; }
-  60% { opacity: 0.97; }
-  65% { opacity: 0.95; }
-  70% { opacity: 0.96; }
-  75% { opacity: 0.94; }
-  80% { opacity: 0.98; }
-  85% { opacity: 0.97; }
-  90% { opacity: 0.95; }
-  95% { opacity: 0.96; }
-  100% { opacity: 0.97; }
+[data-motion="off"] *,
+[data-motion="off"] *::before,
+[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
-.crt-effect {
-  animation: flicker 0.3s infinite;
-}
-
-.light .crt-effect {
-  animation: none;
+[data-crt="off"] .crt-overlay,
+[data-crt="off"] .scanline,
+[data-crt="off"] .scanlines {
+  display: none;
 }

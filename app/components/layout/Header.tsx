@@ -1,163 +1,208 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaGamepad } from 'react-icons/fa';
 import ThemeToggle from '../ui/ThemeToggle';
-
-const navItems = [
-  { name: 'HOME', path: '/' },
-  { name: 'BIO', path: '/bio' },
-  { name: 'EXPERIENCE', path: '/experience' },
-  { name: 'SKILLS', path: '/skills' },
-  { name: 'PROJECTS', path: '/projects' },
-  { name: 'CONTACT', path: '/contact' },
-];
+import { ROUTES } from '@/lib/site';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    toggleRef.current?.focus();
+  }, []);
+
+  // Open the menu on whichever route you're currently on.
+  useEffect(() => {
+    if (!isOpen) return;
+    const current = ROUTES.findIndex((r) => r.path === pathname);
+    setActiveItem(current === -1 ? 0 : current);
+  }, [isOpen, pathname]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const t = event.target as Node;
+      if (!menuRef.current?.contains(t) && !toggleRef.current?.contains(t)) {
         setIsOpen(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-      
       switch (e.key) {
         case 'ArrowUp':
-          setActiveItem((prev) => (prev === 0 ? navItems.length - 1 : prev - 1));
+          // Without this the page scrolls behind the open menu.
+          e.preventDefault();
+          setActiveItem((prev) => (prev === 0 ? ROUTES.length - 1 : prev - 1));
           break;
         case 'ArrowDown':
-          setActiveItem((prev) => (prev === navItems.length - 1 ? 0 : prev + 1));
+          e.preventDefault();
+          setActiveItem((prev) => (prev === ROUTES.length - 1 ? 0 : prev + 1));
+          break;
+        case 'Home':
+          e.preventDefault();
+          setActiveItem(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          setActiveItem(ROUTES.length - 1);
           break;
         case 'Enter':
-          window.location.href = navItems[activeItem].path;
+          e.preventDefault();
+          // router.push, not window.location: a full reload discards the SPA.
+          router.push(ROUTES[activeItem].path);
           setIsOpen(false);
           break;
         case 'Escape':
-          setIsOpen(false);
+          e.preventDefault();
+          close();
           break;
+        case 'Tab': {
+          // Keep focus inside the open menu.
+          const items = itemRefs.current.filter(Boolean) as HTMLAnchorElement[];
+          if (!items.length) return;
+          const first = items[0];
+          const last = items[items.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+          break;
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, activeItem, router, close]);
+
+  // Move real focus with the highlight so screen readers follow along.
+  useEffect(() => {
+    if (isOpen) itemRefs.current[activeItem]?.focus();
   }, [isOpen, activeItem]);
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 dark:bg-black dark:bg-opacity-80 bg-light-bg bg-opacity-90 backdrop-blur-sm border-b-2 border-neon-blue">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2">
-          <FaGamepad className="text-neon-green text-2xl" />
-          <motion.span 
-            className="text-xl font-arcade dark:text-white text-light-text neon-text motion-div-text"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            LENY.DEV
-          </motion.span>
+    <header className="fixed top-0 left-0 z-50 w-full border-b-2 border-border-strong bg-surface-raised/90 backdrop-blur-sm">
+      <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
+        <Link href="/" className="flex min-h-11 shrink-0 items-center gap-2">
+          <FaGamepad className="text-2xl text-neon-green" aria-hidden="true" />
+          <span className="font-arcade text-base text-text sm:text-xl">
+            LENY<span className="text-accent">.DEV</span>
+          </span>
         </Link>
 
-        <div className="flex items-center gap-4">
-          {/* Theme Toggle */}
+        <div className="flex items-center gap-3">
+          <nav aria-label="Main" className="hidden md:block">
+            <ul className="flex items-center gap-6">
+              {ROUTES.map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.path}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`group relative flex min-h-11 items-center font-arcade text-xs tracking-wider transition-colors ${
+                        isActive ? 'text-accent' : 'text-text hover:text-accent'
+                      }`}
+                    >
+                      {item.name}
+                      <span
+                        className={`absolute bottom-1 left-0 h-0.5 bg-accent transition-all duration-300 ${
+                          isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                        }`}
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
           <ThemeToggle />
 
-          {/* Mobile menu button */}
-          <motion.button
-            className="md:hidden arcade-btn px-3 py-2 text-sm"
-            onClick={() => setIsOpen(!isOpen)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            ref={toggleRef}
+            type="button"
+            className="arcade-btn px-3 py-2 text-[0.6rem] md:hidden"
+            onClick={() => setIsOpen((v) => !v)}
             aria-expanded={isOpen}
             aria-controls="mobile-menu"
           >
             {isOpen ? 'CLOSE' : 'MENU'}
-          </motion.button>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-6">
-            {navItems.map((item) => (
-              <Link 
-                key={item.name} 
-                href={item.path}
-                className="relative group"
-              >
-                <motion.span 
-                  className="text-sm font-arcade tracking-wider hover:text-neon-blue transition-colors dark:text-white text-light-text motion-div-text"
-                  whileHover={{ y: -3 }}
-                >
-                  {item.name}
-                </motion.span>
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-neon-blue group-hover:w-full transition-all duration-300"></span>
-              </Link>
-            ))}
-          </nav>
+          </button>
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             ref={menuRef}
             id="mobile-menu"
-            className="md:hidden fixed top-[60px] left-0 w-full z-40 shadow-lg dark:shadow-neon-blue/20 shadow-neon-purple/20"
+            className="absolute left-0 top-full z-40 w-full md:hidden"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
           >
-            <div className="container mx-auto px-4">
-              <div className="rounded-lg overflow-hidden dark:bg-dark-blue/95 bg-white/95 border-2 dark:border-neon-blue border-neon-purple">
+            <div className="container mx-auto px-4 pb-4">
+              <nav
+                aria-label="Mobile"
+                className="arcade-panel pixel-corners overflow-hidden"
+              >
                 <ul className="py-2">
-                  {navItems.map((item, index) => (
-                    <motion.li 
-                      key={item.name}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={`
-                        ${activeItem === index 
-                          ? 'dark:bg-neon-blue/20 bg-neon-purple/10 dark:border-l-4 dark:border-neon-blue border-l-4 border-neon-purple' 
-                          : 'hover:dark:bg-dark-purple/50 hover:bg-light-bg/80'
-                        }
-                        transition-colors duration-200
-                      `}
-                    >
-                      <Link 
-                        href={item.path} 
-                        className="block font-arcade text-sm dark:text-white text-gray-800 px-4 py-3 motion-div-text"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <span className="dark:text-neon-blue text-neon-purple mr-2">&gt;</span>
-                        {item.name}
-                      </Link>
-                    </motion.li>
-                  ))}
+                  {ROUTES.map((item, index) => {
+                    const isActive = pathname === item.path;
+                    return (
+                      <li key={item.name}>
+                        <Link
+                          ref={(el) => {
+                            itemRefs.current[index] = el;
+                          }}
+                          href={item.path}
+                          aria-current={isActive ? 'page' : undefined}
+                          className={`flex items-center gap-2 px-4 py-3 font-arcade text-xs transition-colors ${
+                            activeItem === index
+                              ? 'bg-accent/15 text-accent'
+                              : 'text-text hover:bg-accent/10'
+                          }`}
+                          onClick={() => setIsOpen(false)}
+                          onMouseEnter={() => setActiveItem(index)}
+                        >
+                          <span className="text-accent" aria-hidden="true">
+                            {activeItem === index ? '▶' : '›'}
+                          </span>
+                          {item.name}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
-                <div className="px-4 py-3 dark:bg-dark-purple/30 bg-light-bg/30 border-t dark:border-dark-purple border-gray-200">
-                  <p className="text-xs font-pixel dark:text-gray-300 text-gray-700 text-center motion-div-text">
-                    Press <span className="dark:text-neon-green text-neon-purple font-bold">ESC</span> to close or <span className="dark:text-neon-yellow text-neon-teal font-bold">↑/↓</span> to navigate
-                  </p>
-                </div>
-              </div>
+                <p className="border-t-2 border-border px-4 py-3 text-center font-pixel text-xs text-text-muted">
+                  <span className="text-neon-green">ESC</span> to close,{' '}
+                  <span className="text-neon-yellow">&uarr;/&darr;</span> to navigate
+                </p>
+              </nav>
             </div>
           </motion.div>
         )}
@@ -166,4 +211,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;
