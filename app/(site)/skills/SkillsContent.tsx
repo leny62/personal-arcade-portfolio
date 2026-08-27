@@ -13,8 +13,10 @@ import {
   FaLaptopCode,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons';
-import PageHeader from '../components/ui/PageHeader';
+import PageHeader from '../../components/ui/PageHeader';
 import { accent, type NeonColor } from '@/lib/arcade';
+import { trackClick } from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 interface Category {
   id: string;
@@ -159,10 +161,11 @@ export default function SkillsContent() {
   const [activeId, setActiveId] = useState(skillCategories[0].id);
   const active = skillCategories.find((c) => c.id === activeId)!;
   const ActiveIcon = active.icon;
+  const sectionRef = useSectionTracking<HTMLDivElement>('skill-tree');
 
   return (
     <div className="min-h-screen py-12">
-      <div className="container mx-auto px-4">
+      <div ref={sectionRef} className="container mx-auto px-4">
         <PageHeader title="SKILL TREE" subtitle="Technical abilities and power-ups" />
 
         <div className="mx-auto mb-10 max-w-5xl">
@@ -183,7 +186,10 @@ export default function SkillsContent() {
                   aria-selected={isActive}
                   aria-controls="skill-panel"
                   tabIndex={isActive ? 0 : -1}
-                  onClick={() => setActiveId(category.id)}
+                  onClick={() => {
+                    trackClick(`skill-tab-${category.id}`);
+                    setActiveId(category.id);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                       e.preventDefault();

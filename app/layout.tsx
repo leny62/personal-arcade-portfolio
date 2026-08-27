@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, VT323 } from "next/font/google";
 import "./globals.css";
-import Layout from "./components/layout/Layout";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { SITE } from "@/lib/site";
 
@@ -110,9 +109,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <ThemeProvider>
-          <Layout>{children}</Layout>
-        </ThemeProvider>
+        {/* Chrome lives in the route group layouts: the public site gets the
+            arcade shell and visitor tracking, /admin gets neither. */}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

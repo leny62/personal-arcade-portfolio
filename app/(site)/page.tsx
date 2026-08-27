@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Hero from './components/home/Hero';
-import DestinationMenu, { type Destination } from './components/home/DestinationMenu';
+import Hero from '../components/home/Hero';
+import DestinationMenu, { type Destination } from '../components/home/DestinationMenu';
 
 export const metadata: Metadata = {
   title: 'Leny Pascal IHIRWE | Software Engineer & Creative Technologist',

@@ -1,8 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { getAnonymousId, trackConversion } from '@/lib/analytics';
+import {
+  flushNow,
+  getSessionId,
+  getVisitorId,
+  track,
+  trackOutbound,
+} from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 import { accent, type NeonColor } from '@/lib/arcade';
 import { SITE } from '@/lib/site';
 import {
@@ -15,7 +22,7 @@ import {
   FaGamepad,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons';
-import PageHeader from '../components/ui/PageHeader';
+import PageHeader from '../../components/ui/PageHeader';
 
 const contactMethods: {
   icon: IconType;
@@ -79,55 +86,83 @@ const FIELD_CLASS =
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
+const EMPTY_FORM = {
+  name: '',
+  email: '',
+  subject: '',
+  message: '',
+  website: '',
+};
+
+const GENERIC_ERROR = `Something went wrong. Email me directly at ${SITE.email}.`;
+const RATE_LIMITED =
+  'You have sent a few messages already, try again in a little while.';
+
 export default function ContactContent() {
-  const [formState, setFormState] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  });
+  const [formState, setFormState] = useState(EMPTY_FORM);
   const [status, setStatus] = useState<Status>('idle');
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const connectionsRef = useSectionTracking<HTMLElement>('contact-connections');
+  const formRef = useSectionTracking<HTMLElement>('contact-terminal');
+  const startedRef = useRef(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
+
+    // Fires once per mount, on the first keystroke in any field, so the
+    // funnel can compare form starts against form submits.
+    if (!startedRef.current) {
+      startedRef.current = true;
+      track('FORM_START', { name: 'contact-form' });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
-
-    const prefixedLeadName = `personal-portfolio-${formState.name.trim()}`;
-    const prefixedMessage = formState.subject.trim()
-      ? `${formState.subject.trim()} - ${formState.message}`
-      : formState.message;
+    setErrors([]);
 
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: { accept: '*/*', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formState.name,
           email: formState.email,
-          message: prefixedMessage,
-          anonymousId: getAnonymousId(),
-          agreedToTerms: false,
-          agreedToPrivacy: false,
+          subject: formState.subject.trim() || undefined,
+          message: formState.message,
+          website: formState.website,
+          visitorId: getVisitorId(),
+          sessionId: getSessionId(),
+          source: 'personal-arcade-portfolio',
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to send message');
+      const body = await response.json().catch(() => null);
 
-      await trackConversion(formState.email, prefixedLeadName, 'contact_form');
+      if (!response.ok) {
+        if (response.status === 429) setErrors([RATE_LIMITED]);
+        else setErrors(body?.details ?? [body?.message ?? GENERIC_ERROR]);
+        setStatus('error');
+        return;
+      }
+
+      track('FORM_SUBMIT', { name: 'contact-form' });
+      // The visitor usually leaves right after submitting, so don't wait for
+      // the 3s batch window to close.
+      flushNow();
 
       setStatus('success');
-      setFormState({ name: '', email: '', subject: '', message: '' });
+      setFormState(EMPTY_FORM);
+      startedRef.current = false;
       setTimeout(() => setStatus('idle'), 6000);
     } catch {
+      setErrors([GENERIC_ERROR]);
       setStatus('error');
-      setTimeout(() => setStatus('idle'), 6000);
     }
   };
 
@@ -142,6 +177,7 @@ export default function ContactContent() {
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <motion.section
+              ref={connectionsRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
@@ -163,6 +199,12 @@ export default function ContactContent() {
                     <li key={method.title} style={accent(method.color)}>
                       <a
                         href={method.action}
+                        onClick={() =>
+                          trackOutbound(
+                            `contact-${method.title.toLowerCase()}`,
+                            method.action
+                          )
+                        }
                         {...(method.external
                           ? { target: '_blank', rel: 'noopener noreferrer' }
                           : {})}
@@ -201,6 +243,7 @@ export default function ContactContent() {
             </motion.section>
 
             <motion.section
+              ref={formRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
@@ -215,7 +258,29 @@ export default function ContactContent() {
                 SEND MESSAGE
               </h2>
 
+              {/* Native constraints intentionally mirror the backend DTO. The
+                  contact endpoint allows 5 requests per hour per IP and counts
+                  rejected ones, so a typo must not cost a submission. */}
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Honeypot. Bots fill it in, the backend then discards the
+                    submission while still returning a normal success. Kept
+                    off-screen rather than display:none, which some bots skip. */}
+                <input
+                  type="text"
+                  name="website"
+                  value={formState.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    left: '-9999px',
+                    opacity: 0,
+                    height: 0,
+                  }}
+                />
+
                 <div>
                   <label
                     htmlFor="name"
@@ -230,6 +295,8 @@ export default function ContactContent() {
                     value={formState.name}
                     onChange={handleChange}
                     required
+                    minLength={2}
+                    maxLength={150}
                     autoComplete="name"
                     className={FIELD_CLASS}
                     placeholder="Enter your name"
@@ -250,6 +317,7 @@ export default function ContactContent() {
                     value={formState.email}
                     onChange={handleChange}
                     required
+                    maxLength={255}
                     autoComplete="email"
                     className={FIELD_CLASS}
                     placeholder="you@example.com"
@@ -269,6 +337,7 @@ export default function ContactContent() {
                     name="subject"
                     value={formState.subject}
                     onChange={handleChange}
+                    maxLength={255}
                     className={FIELD_CLASS}
                     placeholder="What is this about?"
                   />
@@ -287,6 +356,8 @@ export default function ContactContent() {
                     value={formState.message}
                     onChange={handleChange}
                     required
+                    minLength={10}
+                    maxLength={10000}
                     rows={5}
                     className={`${FIELD_CLASS} resize-none`}
                     placeholder="Type your message here..."
@@ -303,18 +374,25 @@ export default function ContactContent() {
 
                 {/* Announced, not just coloured: the old version signalled state
                     only through the button's background. */}
-                <p
+                <div
                   role="status"
                   aria-live="polite"
-                  className={`min-h-6 text-center font-pixel text-lg ${
-                    status === 'error' ? 'text-neon-red' : 'text-neon-green'
-                  }`}
+                  className="min-h-6 text-center font-pixel text-lg"
                 >
-                  {status === 'success' &&
-                    'Message sent. I usually reply within 24-48 hours.'}
-                  {status === 'error' &&
-                    `Something went wrong. Email me directly at ${SITE.email}.`}
-                </p>
+                  {status === 'success' && (
+                    <p className="text-neon-green">
+                      Message sent. I usually reply within 24-48 hours.
+                    </p>
+                  )}
+
+                  {status === 'error' && (
+                    <ul className="space-y-1 text-neon-red">
+                      {errors.map((error) => (
+                        <li key={error}>{error}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </form>
 
               <div className="mt-6 border-t-2 border-border pt-5 text-center">

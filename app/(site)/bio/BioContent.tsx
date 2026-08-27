@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { FaUser, FaGraduationCap, FaCode } from 'react-icons/fa';
-import PageHeader from '../components/ui/PageHeader';
+import PageHeader from '../../components/ui/PageHeader';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 const stats = [
   { label: 'NAME', value: 'Leny Pascal IHIRWE' },
@@ -47,6 +48,10 @@ const story = [
 ];
 
 export default function BioContent() {
+  const statsRef = useSectionTracking<HTMLElement>('player-profile');
+  const backstoryRef = useSectionTracking<HTMLElement>('backstory');
+  const educationRef = useSectionTracking<HTMLElement>('education');
+
   return (
     <div className="min-h-screen py-12">
       <div className="container mx-auto px-4">
@@ -54,6 +59,7 @@ export default function BioContent() {
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
           <motion.section
+            ref={statsRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.05 }}
@@ -91,6 +97,7 @@ export default function BioContent() {
           </motion.section>
 
           <motion.section
+            ref={backstoryRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.12 }}
@@ -112,6 +119,7 @@ export default function BioContent() {
           </motion.section>
 
           <motion.section
+            ref={educationRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.18 }}

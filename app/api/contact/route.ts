@@ -1,45 +1,25 @@
-import { NextResponse } from "next/server";
-
-const resolveApiBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured");
-  }
-  return baseUrl.replace(/\/$/, "");
-};
+import { backendUrl, forwardedHeaders, relay } from "@/lib/backend";
 
 export async function POST(request: Request) {
-  try {
-    const payload = await request.json();
-    const apiBaseUrl = resolveApiBaseUrl();
+  const body = await request.text();
 
-    const upstreamResponse = await fetch(`${apiBaseUrl}/contact`, {
+  try {
+    const upstream = await fetch(backendUrl("/contact"), {
       method: "POST",
-      headers: {
-        accept: "*/*",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers: forwardedHeaders(request),
+      body,
       cache: "no-store",
     });
 
-    const responseText = await upstreamResponse.text();
-    const contentType =
-      upstreamResponse.headers.get("content-type") || "application/json";
-
-    return new Response(responseText, {
-      status: upstreamResponse.status,
-      headers: {
-        "Content-Type": contentType,
-      },
-    });
+    return relay(upstream);
   } catch (error) {
-    return NextResponse.json(
+    console.error("contact proxy failed", error);
+    return Response.json(
       {
-        error: "Failed to submit contact form",
-        details: error instanceof Error ? error.message : "Unknown error",
+        statusCode: 502,
+        message: "Could not reach the message service. Please email me directly.",
       },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }
