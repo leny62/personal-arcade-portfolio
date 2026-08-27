@@ -44,6 +44,22 @@
   --font-arcade: var(--font-press-start), "VT323", monospace;
   --font-pixel: var(--font-vt323), "Courier New", monospace;
 
+  /* Admin only. The arcade faces are unreadable at table density, so the
+     dashboard borrows the colour system but not the typography. */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+
+  /* Chart series. The neon accents are display colours and sit far outside the
+     legible lightness band, so data gets its own scale. These three are
+     validated for colourblind separation against the admin surfaces
+     (light #fdf9ee, dark #12121c); re-run the validator before changing one.
+     Slot order is the safety mechanism, not cosmetic. */
+  --color-chart-1: #2a78d6;
+  --color-chart-2: #eb6834;
+  --color-chart-3: #1baf7a;
+
   --background-image-grid-pattern:
     linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
     linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
@@ -133,6 +149,11 @@
   --color-light-bg: #0a0a12;
   --color-light-text: #e8e8f0;
 
+  /* Same three hues re-stepped for the dark surface, not an inversion. */
+  --color-chart-1: #3987e5;
+  --color-chart-2: #d95926;
+  --color-chart-3: #199e70;
+
   --glow: 0 0 4px currentColor, 0 0 12px currentColor;
   --glow-strong: 0 0 4px #fff, 0 0 12px currentColor, 0 0 28px currentColor;
   --grid-line: rgb(0 255 255 / 0.1);
@@ -170,6 +191,12 @@
 
   input, textarea {
     font-family: var(--font-pixel);
+  }
+
+  /* The arcade faces are display-only. At table and form density they are
+     unreadable, so everything under the admin shell falls back to the UI sans. */
+  .admin-root :is(h1, h2, h3, h4, h5, h6, button, input, textarea, select) {
+    font-family: var(--font-ui);
   }
 
   input::placeholder, textarea::placeholder {

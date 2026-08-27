@@ -10,7 +10,9 @@ import {
   FaTrophy,
   FaChevronDown,
 } from 'react-icons/fa';
-import PageHeader from '../components/ui/PageHeader';
+import PageHeader from '../../components/ui/PageHeader';
+import { trackClick } from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 const experiences = [
   {
@@ -104,10 +106,26 @@ const experiences = [
 
 export default function ExperienceContent() {
   const [selected, setSelected] = useState<number | null>(experiences[0].id);
+  const sectionRef = useSectionTracking<HTMLDivElement>('career-quests');
+
+  // Only the expand is tracked. Collapses would double the count for a role
+  // without saying anything extra about interest in it.
+  const toggle = (
+    exp: (typeof experiences)[number],
+    isSelected: boolean,
+    origin: 'timeline' | 'card'
+  ) => {
+    if (!isSelected) {
+      trackClick(
+        `experience-${origin}-${exp.company.toLowerCase().replace(/\s+/g, '-')}`
+      );
+    }
+    setSelected(isSelected ? null : exp.id);
+  };
 
   return (
     <div className="min-h-screen py-12">
-      <div className="container mx-auto px-4">
+      <div ref={sectionRef} className="container mx-auto px-4">
         <PageHeader
           title="CAREER QUESTS"
           subtitle="My professional journey and achievements"
@@ -127,7 +145,7 @@ export default function ExperienceContent() {
                   <li key={exp.id} className="relative">
                     <button
                       type="button"
-                      onClick={() => setSelected(isSelected ? null : exp.id)}
+                      onClick={() => toggle(exp, isSelected, 'timeline')}
                       aria-label={`${exp.title} at ${exp.company}, ${exp.period}`}
                       aria-pressed={isSelected}
                       className={`block h-5 w-5 rounded-full border-2 transition-transform duration-200 hover:scale-125 ${
@@ -222,7 +240,7 @@ export default function ExperienceContent() {
 
                   <button
                     type="button"
-                    onClick={() => setSelected(isSelected ? null : exp.id)}
+                    onClick={() => toggle(exp, isSelected, 'card')}
                     aria-expanded={isSelected}
                     aria-controls={panelId}
                     className="mt-4 flex w-full items-center justify-center gap-2 border-t-2 border-border pt-3 font-pixel text-base text-text-muted transition-colors hover:text-accent"

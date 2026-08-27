@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FaArrowRight } from 'react-icons/fa';
 import { accent, type NeonColor } from '@/lib/arcade';
+import { trackClick } from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 export interface Destination {
   title: string;
@@ -20,6 +22,7 @@ export interface Destination {
 export default function DestinationMenu({ items }: { items: Destination[] }) {
   const [focused, setFocused] = useState(0);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const sectionRef = useSectionTracking<HTMLUListElement>('select-destination');
 
   const move = useCallback(
     (next: number) => {
@@ -62,7 +65,7 @@ export default function DestinationMenu({ items }: { items: Destination[] }) {
   };
 
   return (
-    <ul className="grid grid-cols-1 gap-5 md:grid-cols-2">
+    <ul ref={sectionRef} className="grid grid-cols-1 gap-5 md:grid-cols-2">
       {items.map((item, index) => (
         <motion.li
           key={item.title}
@@ -80,6 +83,9 @@ export default function DestinationMenu({ items }: { items: Destination[] }) {
             tabIndex={index === focused ? 0 : -1}
             onFocus={() => setFocused(index)}
             onKeyDown={(e) => onKeyDown(e, index)}
+            onClick={() =>
+              trackClick(`destination-${item.title.toLowerCase()}`, item.path)
+            }
             className="group block h-full border-2 border-(--accent) bg-surface-raised p-6 pixel-corners transition-transform duration-200 hover:-translate-y-1 dark:bg-black/60"
           >
             <div className="flex h-full flex-col">

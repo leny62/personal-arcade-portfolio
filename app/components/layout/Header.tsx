@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaGamepad } from 'react-icons/fa';
 import ThemeToggle from '../ui/ThemeToggle';
 import { ROUTES } from '@/lib/site';
+import { trackClick } from '@/lib/analytics';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -105,7 +106,11 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 z-50 w-full border-b-2 border-border-strong bg-surface-raised/90 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex min-h-11 shrink-0 items-center gap-2">
+        <Link
+          href="/"
+          onClick={() => trackClick('header-logo', '/')}
+          className="flex min-h-11 shrink-0 items-center gap-2"
+        >
           <FaGamepad className="text-2xl text-neon-green" aria-hidden="true" />
           <span className="font-arcade text-base text-text sm:text-xl">
             LENY<span className="text-accent">.DEV</span>
@@ -122,6 +127,9 @@ const Header = () => {
                     <Link
                       href={item.path}
                       aria-current={isActive ? 'page' : undefined}
+                      onClick={() =>
+                        trackClick(`nav-${item.name.toLowerCase()}`, item.path)
+                      }
                       className={`group relative flex min-h-11 items-center font-arcade text-xs tracking-wider transition-colors ${
                         isActive ? 'text-accent' : 'text-text hover:text-accent'
                       }`}
@@ -186,7 +194,13 @@ const Header = () => {
                               ? 'bg-accent/15 text-accent'
                               : 'text-text hover:bg-accent/10'
                           }`}
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => {
+                            trackClick(
+                              `mobile-nav-${item.name.toLowerCase()}`,
+                              item.path
+                            );
+                            setIsOpen(false);
+                          }}
                           onMouseEnter={() => setActiveItem(index)}
                         >
                           <span className="text-accent" aria-hidden="true">

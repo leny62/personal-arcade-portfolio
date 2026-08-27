@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { SITE, ROUTES } from '@/lib/site';
+import { trackClick, trackOutbound } from '@/lib/analytics';
 
 const socialLinks = [
   { icon: FaGithub, url: SITE.github, label: 'GitHub' },
@@ -35,6 +36,9 @@ const Footer = () => {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() =>
+                      trackOutbound(`footer-${link.label.toLowerCase()}`, link.url)
+                    }
                     className="flex h-11 w-11 items-center justify-center text-text transition-colors hover:text-accent"
                     aria-label={link.label}
                     initial={{ opacity: 0, y: 12 }}
@@ -57,6 +61,9 @@ const Footer = () => {
                 <li key={item.name}>
                   <Link
                     href={item.path}
+                    onClick={() =>
+                      trackClick(`footer-nav-${item.name.toLowerCase()}`, item.path)
+                    }
                     className="inline-flex min-h-11 items-center font-pixel text-base text-text-muted transition-colors hover:text-accent"
                   >
                     {item.label}
@@ -77,6 +84,7 @@ const Footer = () => {
 
           <Link
             href="/contact"
+            onClick={() => trackClick('footer-press-start-to-connect', '/contact')}
             className="mt-2 inline-flex min-h-11 items-center font-arcade text-[0.6rem] text-text-muted transition-colors hover:text-neon-pink"
           >
             <span className="text-neon-pink">PRESS START</span> TO CONNECT

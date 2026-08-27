@@ -11,7 +11,9 @@ import {
   FaChevronRight,
   FaTags,
 } from 'react-icons/fa';
-import PageHeader from '../components/ui/PageHeader';
+import PageHeader from '../../components/ui/PageHeader';
+import { trackClick, trackOutbound } from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 const projects = [
   {
@@ -150,6 +152,9 @@ export default function ProjectsContent() {
   const prev = useCallback(() => go(current - 1, -1), [current, go]);
 
   const project = projects[current];
+  const sectionRef = useSectionTracking<HTMLDivElement>('project-arcade');
+
+  const slug = (title: string) => title.toLowerCase().replace(/\s+/g, '-');
 
   const variants = {
     enter: (dir: number) => ({ x: dir > 0 ? 600 : -600, opacity: 0 }),
@@ -162,7 +167,7 @@ export default function ProjectsContent() {
       <div className="container mx-auto px-4">
         <PageHeader title="PROJECT ARCADE" subtitle="My featured development work" />
 
-        <div className="relative mx-auto max-w-6xl">
+        <div ref={sectionRef} className="relative mx-auto max-w-6xl">
           <section
             aria-roledescription="carousel"
             aria-label="Featured projects"
@@ -234,7 +239,12 @@ export default function ProjectsContent() {
                       <div className="mt-auto flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={() => setDetail((v) => !v)}
+                          onClick={() => {
+                            if (!detail) {
+                              trackClick(`project-details-${slug(project.title)}`);
+                            }
+                            setDetail((v) => !v);
+                          }}
                           aria-expanded={detail}
                           aria-controls="project-detail"
                           className="arcade-btn arcade-btn-ghost pixel-corners px-4 py-2 text-[0.6rem]"
@@ -248,6 +258,12 @@ export default function ProjectsContent() {
                             href={project.github}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() =>
+                              trackOutbound(
+                                `project-github-${slug(project.title)}`,
+                                project.github
+                              )
+                            }
                             className="arcade-btn pixel-corners px-4 py-2 text-[0.6rem]"
                           >
                             <FaGithub aria-hidden="true" />
@@ -260,6 +276,12 @@ export default function ProjectsContent() {
                             href={project.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() =>
+                              trackOutbound(
+                                `project-live-${slug(project.title)}`,
+                                project.liveUrl
+                              )
+                            }
                             className="arcade-btn pixel-corners px-4 py-2 text-[0.6rem]"
                           >
                             <FaExternalLinkAlt aria-hidden="true" />

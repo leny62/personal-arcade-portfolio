@@ -2,9 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { FaGamepad, FaChevronDown } from 'react-icons/fa';
+import { trackClick } from '@/lib/analytics';
+import { useSectionTracking } from '@/lib/useSectionTracking';
 
 export default function Hero() {
+  const sectionRef = useSectionTracking<HTMLDivElement>('hero');
+
   const toMenu = () => {
+    trackClick('press-start', '#destinations');
+
     const target = document.getElementById('destinations');
     if (!target) return;
     const reduced =
@@ -16,7 +22,7 @@ export default function Hero() {
   };
 
   return (
-    <div className="text-center">
+    <div ref={sectionRef} className="text-center">
       <motion.div
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
