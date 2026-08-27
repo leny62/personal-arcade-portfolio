@@ -91,7 +91,7 @@ export default async function DashboardPage({
             hint={`${full(o.newVisitors)} new · ${full(o.returningVisitors)} returning`}
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:col-span-3 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 md:col-span-3 lg:grid-cols-3">
           <StatTile label="Sessions" value={compact(o.sessions)} hint={`${o.pagesPerSession} pages each`} />
           <StatTile label="Page views" value={compact(o.pageViews)} />
           <StatTile label="Conversions" value={full(o.conversions)} hint={percent(o.conversionRate)} />

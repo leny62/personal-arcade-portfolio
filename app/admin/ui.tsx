@@ -72,7 +72,7 @@ export function Hero({
       <p className="font-data text-[0.65rem] tracking-[0.14em] text-text-muted uppercase">
         {label}
       </p>
-      <p className="mt-1 text-5xl leading-none font-semibold text-text">{value}</p>
+      <p className="mt-1 text-4xl leading-none font-semibold text-text sm:text-5xl">{value}</p>
       {hint && <p className="mt-2 text-xs text-text-muted">{hint}</p>}
     </div>
   );

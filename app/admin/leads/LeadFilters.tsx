@@ -6,7 +6,7 @@ import { LEAD_PRIORITIES, LEAD_STATUSES } from "@/lib/admin-api";
 import { humanize } from "@/lib/format";
 
 const FIELD =
-  "border-2 border-border-strong bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none";
+  "w-full border-2 border-border-strong bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none sm:w-auto";
 
 export default function LeadFilters() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export default function LeadFilters() {
         type="search"
         placeholder="Search name, email, company"
         defaultValue={params.get("search") ?? ""}
-        className={`${FIELD} min-w-56 flex-1`}
+        className={`${FIELD} min-w-0 flex-1`}
       />
 
       <select
@@ -75,7 +75,7 @@ export default function LeadFilters() {
 
       <button
         type="submit"
-        className="border-2 border-accent bg-accent px-4 py-2 text-sm font-medium text-text-inverse transition-opacity hover:opacity-90"
+        className="w-full border-2 border-accent bg-accent px-4 py-2 text-sm font-medium text-text-inverse transition-opacity hover:opacity-90 sm:w-auto"
       >
         Search
       </button>
