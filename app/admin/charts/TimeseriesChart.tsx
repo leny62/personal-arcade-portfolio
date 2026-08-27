@@ -3,12 +3,7 @@
 import { useId, useState } from "react";
 import type { TimeseriesPoint } from "@/lib/admin-api";
 import { full, shortDate } from "@/lib/format";
-
-const VIEW_W = 820;
-const VIEW_H = 280;
-const PAD = { top: 18, right: 60, bottom: 30, left: 46 };
-const PLOT_W = VIEW_W - PAD.left - PAD.right;
-const PLOT_H = VIEW_H - PAD.top - PAD.bottom;
+import { useMediaQuery } from "@/lib/useMediaQuery";
 
 // Slot order is fixed. Visitors leads because it is the series the dashboard is
 // about, and it is the one that gets the direct end label.
@@ -30,6 +25,7 @@ const niceStep = (raw: number): number => {
 
 export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
+  const narrow = useMediaQuery("(max-width: 640px)");
   const clipId = useId();
 
   if (data.length === 0) {
@@ -39,6 +35,17 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
       </p>
     );
   }
+
+  // Font sizes live in viewBox units, so a wide viewBox on a narrow screen
+  // shrinks the labels into illegibility. Narrow screens get their own box.
+  const VIEW_W = narrow ? 400 : 820;
+  const VIEW_H = narrow ? 300 : 280;
+  const PAD = narrow
+    ? { top: 16, right: 40, bottom: 34, left: 38 }
+    : { top: 18, right: 60, bottom: 30, left: 46 };
+  const PLOT_W = VIEW_W - PAD.left - PAD.right;
+  const PLOT_H = VIEW_H - PAD.top - PAD.bottom;
+  const fs = narrow ? 12 : 11;
 
   const rawMax = Math.max(
     1,
@@ -57,17 +64,15 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
     data.map((d, i) => `${i === 0 ? "M" : "L"}${x(i)} ${y(d[key])}`).join(" ");
 
   const ticks = [0, 1, 2, 3, 4].map((i) => i * step);
-
-  // Thin the x labels so they never collide, whatever the range length.
-  const labelEvery = Math.max(1, Math.ceil(data.length / 6));
+  const labelEvery = Math.max(1, Math.ceil(data.length / (narrow ? 3 : 6)));
 
   const active = hover !== null ? data[hover] : null;
   const hoverPct = hover !== null ? (x(hover) / VIEW_W) * 100 : 0;
   const flip = hoverPct > 62;
 
-  const pick = (event: React.MouseEvent<SVGRectElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const ratio = (event.clientX - rect.left) / rect.width;
+  const at = (clientX: number, el: SVGRectElement) => {
+    const rect = el.getBoundingClientRect();
+    const ratio = (clientX - rect.left) / rect.width;
     const i = Math.round(ratio * (data.length - 1));
     setHover(Math.min(data.length - 1, Math.max(0, i)));
   };
@@ -82,11 +87,13 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
     });
   };
 
+  const last = data[data.length - 1];
+
   return (
     <div className="relative">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="h-auto w-full"
+        className="h-auto w-full touch-pan-y"
         role="img"
         aria-label="Visitors, sessions and page views over time"
         tabIndex={0}
@@ -110,10 +117,11 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
               strokeWidth={1}
             />
             <text
-              x={PAD.left - 10}
+              x={PAD.left - 8}
               y={y(t) + 4}
               textAnchor="end"
-              className="fill-text-muted text-[11px] tabular-nums"
+              fontSize={fs}
+              className="fill-text-muted tabular-nums"
             >
               {full(t)}
             </text>
@@ -126,8 +134,9 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
               key={d.date}
               x={x(i)}
               y={VIEW_H - 10}
-              textAnchor="middle"
-              className="fill-text-muted text-[11px]"
+              textAnchor={i === data.length - 1 ? "end" : "middle"}
+              fontSize={fs}
+              className="fill-text-muted"
             >
               {shortDate(d.date)}
             </text>
@@ -164,7 +173,7 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
           <circle
             key={s.key}
             cx={x(data.length - 1)}
-            cy={y(data[data.length - 1][s.key])}
+            cy={y(last[s.key])}
             r={4.5}
             fill={s.color}
             stroke="var(--color-surface-raised)"
@@ -172,30 +181,28 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
           />
         ))}
 
-        {active && (
-          <g>
-            {SERIES.map((s) => (
-              <circle
-                key={s.key}
-                cx={x(hover!)}
-                cy={y(active[s.key])}
-                r={4.5}
-                fill={s.color}
-                stroke="var(--color-surface-raised)"
-                strokeWidth={2}
-              />
-            ))}
-          </g>
-        )}
+        {active &&
+          SERIES.map((s) => (
+            <circle
+              key={s.key}
+              cx={x(hover!)}
+              cy={y(active[s.key])}
+              r={4.5}
+              fill={s.color}
+              stroke="var(--color-surface-raised)"
+              strokeWidth={2}
+            />
+          ))}
 
         {/* Only the lead series is direct-labelled; three labels at these values
             would sit on top of each other. */}
         <text
-          x={x(data.length - 1) + 10}
-          y={y(data[data.length - 1].visitors) + 4}
-          className="fill-text text-[12px] font-semibold tabular-nums"
+          x={x(data.length - 1) + 9}
+          y={y(last.visitors) + 4}
+          fontSize={fs + 1}
+          className="fill-text font-semibold tabular-nums"
         >
-          {full(data[data.length - 1].visitors)}
+          {full(last.visitors)}
         </text>
 
         <rect
@@ -204,18 +211,21 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
           width={PLOT_W}
           height={PLOT_H}
           fill="transparent"
-          onMouseMove={pick}
+          onMouseMove={(e) => at(e.clientX, e.currentTarget)}
           onMouseLeave={() => setHover(null)}
+          onTouchStart={(e) => at(e.touches[0].clientX, e.currentTarget)}
+          onTouchMove={(e) => at(e.touches[0].clientX, e.currentTarget)}
+          onTouchEnd={() => setHover(null)}
         />
       </svg>
 
       {active && (
         <div
-          className="pointer-events-none absolute top-2 z-10 min-w-40 border-2 border-border-strong bg-surface-raised px-3 py-2 text-xs shadow-lg"
+          className="pointer-events-none absolute top-2 z-10 max-w-[60%] min-w-36 border-2 border-border-strong bg-surface-raised px-3 py-2 text-xs shadow-lg"
           style={
             flip
-              ? { right: `${100 - hoverPct}%`, marginRight: 12 }
-              : { left: `${hoverPct}%`, marginLeft: 12 }
+              ? { right: `${100 - hoverPct}%`, marginRight: 10 }
+              : { left: `${hoverPct}%`, marginLeft: 10 }
           }
         >
           <p className="mb-1.5 font-data text-[0.65rem] tracking-wider text-text-muted uppercase">
@@ -249,6 +259,43 @@ export default function TimeseriesChart({ data }: { data: TimeseriesPoint[] }) {
           </span>
         ))}
       </div>
+
+      <details className="mt-4 border-t border-border pt-3">
+        <summary className="cursor-pointer text-xs text-text-muted hover:text-text">
+          Table view
+        </summary>
+        <div className="mt-3 max-h-72 overflow-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 bg-surface-raised">
+              <tr className="border-b border-border text-text-muted">
+                <th className="py-1.5 pr-3 font-medium">Date</th>
+                {SERIES.map((s) => (
+                  <th key={s.key} className="py-1.5 pr-3 text-right font-medium">
+                    {s.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((d) => (
+                <tr key={d.date} className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 whitespace-nowrap text-text">
+                    {shortDate(d.date)}
+                  </td>
+                  {SERIES.map((s) => (
+                    <td
+                      key={s.key}
+                      className="py-1.5 pr-3 text-right tabular-nums text-text-muted"
+                    >
+                      {full(d[s.key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
   );
 }

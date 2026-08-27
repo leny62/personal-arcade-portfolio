@@ -54,7 +54,40 @@ export default async function LeadsPage({
         </Card>
       ) : (
         <>
-          <div className="overflow-x-auto border-2 border-border-strong bg-surface-raised">
+          <ul className="flex flex-col gap-3 md:hidden">
+            {result.data.map((lead) => (
+              <li
+                key={lead.id}
+                className="border-2 border-border-strong bg-surface-raised p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/admin/leads/${lead.id}`}
+                      className="font-medium text-text hover:text-accent"
+                    >
+                      {lead.name}
+                    </Link>
+                    <p className="truncate text-xs text-text-muted">{lead.email}</p>
+                    {lead.company && (
+                      <p className="truncate text-xs text-text-muted">{lead.company}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <Pill value={lead.status} />
+                    <Pill value={lead.priority} />
+                  </div>
+                </div>
+                <p className="mt-2.5 text-xs text-text-muted">
+                  {humanize(lead.source)}
+                  {lead.isReturning && <span className="ml-1.5 text-chart-2">returning</span>}
+                  <span className="text-text-muted"> · {relative(lead.createdAt)}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden overflow-x-auto border-2 border-border-strong bg-surface-raised md:block">
             <table className="w-full min-w-3xl text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-border-strong">

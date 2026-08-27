@@ -70,7 +70,7 @@ export default function BarList({
               </div>
 
               {showing && row.details && row.details.length > 0 && (
-                <div className="pointer-events-none absolute right-0 -top-1 z-10 min-w-40 -translate-y-full border-2 border-border-strong bg-surface-raised px-3 py-2 text-xs shadow-lg">
+                <div className="pointer-events-none absolute right-0 -top-1 z-10 max-w-[calc(100vw-2rem)] min-w-40 -translate-y-full border-2 border-border-strong bg-surface-raised px-3 py-2 text-xs shadow-lg">
                   <p className="mb-1.5 max-w-56 truncate font-semibold text-text">
                     {row.label}
                   </p>

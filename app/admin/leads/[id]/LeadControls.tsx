@@ -11,7 +11,7 @@ import { humanize } from "@/lib/format";
 import { setPriority, setStatus } from "../actions";
 
 const FIELD =
-  "border-2 border-border-strong bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none disabled:opacity-60";
+  "w-full border-2 border-border-strong bg-surface px-3 py-2 text-sm text-text focus:border-accent focus:outline-none disabled:opacity-60 sm:w-auto";
 
 export default function LeadControls({
   id,

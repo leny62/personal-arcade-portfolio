@@ -28,24 +28,12 @@ export default async function AdminLayout({
   return (
     <div className="admin-root min-h-screen bg-surface font-ui text-text">
       <header className="border-b-2 border-border-strong bg-surface-raised">
-        <div className="mx-auto flex max-w-7xl items-center gap-6 px-5 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-5">
           <span className="font-data text-xs tracking-[0.18em] text-accent uppercase">
             Portfolio Admin
           </span>
 
-          <nav aria-label="Admin" className="flex items-center gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="px-3 py-1.5 text-sm text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-4">
+          <div className="order-3 ml-auto flex items-center gap-3 sm:order-none">
             <Link
               href="/"
               className="text-sm text-text-muted transition-colors hover:text-accent"
@@ -61,10 +49,25 @@ export default async function AdminLayout({
               </button>
             </form>
           </div>
+
+          <nav
+            aria-label="Admin"
+            className="order-4 -mx-1 flex w-full items-center gap-1 border-t border-border pt-1.5 sm:order-none sm:mx-0 sm:w-auto sm:border-0 sm:pt-0"
+          >
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="px-3 py-1.5 text-sm text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>
     </div>
   );
 }
